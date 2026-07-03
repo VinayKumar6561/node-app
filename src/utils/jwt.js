@@ -1,7 +1,10 @@
 const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
 
-const ACCESS_SECRET = "access_secret_key";
-const REFRESH_SECRET = "refresh_secret_key";
+dotenv.config();
+
+const ACCESS_SECRET = process.env.ACCESS_SECRET;
+const REFRESH_SECRET = process.env.REFRESH_SECRET;
 
 // access token (short life)
 function generateAccessToken(user) {

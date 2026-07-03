@@ -1,12 +1,13 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const cors = require("cors");
 dotenv.config();
 
-// Load env variables
+const corsOptions = require("./config/cors");
 
 const app = express();
 
-// Regular Middlewares
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use("/auth", require("./routes/auth.routes"));
