@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { generateAccessToken, generateRefreshToken } = require("../utils/jwt");
+const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require("../utils/jwt");
 const db = require("../config/db");
 
 async function check(req, res) {
@@ -116,4 +116,65 @@ async function login(req, res) {
     });
   }
 }
-module.exports = { register, login, check };
+
+async function getRefreshToken(req, res) {
+  const { refreshToken } = req.body;
+
+  // 1. Check if token exists
+  if (!refreshToken) {
+    return res.status(401).json({
+      message: "Refresh token required",
+    });
+  }
+
+  try {
+    // 2. Verify refresh token
+    const decoded = verifyRefreshToken(refreshToken);
+
+    // 3. Check if token exists in database
+    const [tokens] = await db.query(
+      `SELECT * FROM refresh_tokens
+       WHERE user_id = ?
+       AND token_hash = ?`,
+      [decoded.id, refreshToken]
+    );
+
+    if (tokens.length === 0) {
+      return res.status(401).json({
+        message: "Invalid refresh token",
+      });
+    }
+
+    // 4. Get user
+    const [users] = await db.query(
+      `SELECT id, email
+       FROM users
+       WHERE id = ?`,
+      [decoded.id]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const user = users[0];
+
+    // 5. Generate new access token
+    const accessToken =
+      generateAccessToken(user);
+
+    // 6. Return it
+    return res.json({
+      accessToken,
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(401).json({
+      message: "Refresh token expired or invalid",
+    });
+  }
+}
+module.exports = { register, login, getRefreshToken, check };

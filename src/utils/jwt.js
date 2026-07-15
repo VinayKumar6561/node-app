@@ -24,9 +24,18 @@ function generateRefreshToken(user) {
   );
 }
 
+function verifyRefreshToken(token) {
+  return jwt.verify(token, REFRESH_SECRET);
+}
+
+function verifyAccessToken(token) {
+  return jwt.verify(token, ACCESS_SECRET);
+}
 module.exports = {
   generateAccessToken,
   generateRefreshToken,
+  verifyRefreshToken,
+  verifyAccessToken,
   ACCESS_SECRET,
   REFRESH_SECRET
 };
